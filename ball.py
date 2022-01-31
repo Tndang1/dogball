@@ -9,8 +9,8 @@ class Ball:
         self.img = pygame.transform.scale(self.img, (15,15))
         self.rect = self.img.get_rect()
         self.vel = 1
+        #Determine starting location of the ball. (0,0) is the top left of the game screen
         self.direction = random.randint(1,4)
-        #create a seperate method?
         if self.direction == 1:
             self.x = random.randint(0, 465)
             self.y = -15

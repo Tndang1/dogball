@@ -1,11 +1,13 @@
 # imports
 from ctypes import sizeof
+from queue import Empty
 import sys
 import pygame
 import random
 
 from player import Player
 from ball import Ball
+from power_ball import PowerBall
 
 test = False
 
@@ -19,7 +21,7 @@ class CatchBall:
         self.ball_timer = 3000
         self.score = 0
         #Accounts for first ball
-        self.possible_score = 1
+        self.ball_counter = 1
         self.ball = Ball(self)
         self.balls = [self.ball]
         self.player = Player(self)
@@ -32,7 +34,7 @@ class CatchBall:
         while True:
             self.check_keys()
             self.player.moving()
-            if self.possible_score != 50:
+            if self.ball_counter != 50:
                 self.ball_timer -= random.randint(0,200)
                 if test:
                     self.ball_timer = 0
@@ -61,6 +63,8 @@ class CatchBall:
                 sys.exit()
             #Begins movement of player
             if event.type == pygame.KEYDOWN:
+                if test:
+                    print("Key down recognized")
                 if event.key == pygame.K_d:
                     self.player.right = True
                 if event.key == pygame.K_a:
@@ -82,34 +86,41 @@ class CatchBall:
                     self.player.down = False
                 if event.key == pygame.K_w:
                     self.player.up = False
+                    
     def update_screen(self):
         #Updates screen with new positions
         self.screen.fill(0)
         self.screen.blit(self.background, (0, 0))
         for ball in self.balls:
             ball.moving()
-            #ball.blit_ball()
         self.player.blit_player()
         self.showtext()
         pygame.display.flip()
 
     def summon_balls(self):
         #Creates ball obejct, adds to array, counts total number of balls created
-        if test:
-            print("In summon_balls")
-        self.possible_score += 1
-        ball = Ball(self)
+        self.ball_counter += 1
+        ball_chance = random.randint(1, 10)
+        if ball_chance > 8:
+            ball = PowerBall(self.player)
+            ball.vel = random.uniform(1.5, 2.5)
+        else:
+            ball = Ball(self)
         self.balls.append(ball)
 
     def catch_ball(self):
         #When player and ball rectangle collide, adds 1 to score and removes ball from array and screen
         for ball in self.balls:
             if ball.rect.colliderect(self.player.rect):
+                if type(ball) is PowerBall:
+                    ball.power_up(self.player)
                 self.balls.pop(self.balls.index(ball))
                 self.score += 1
 
     def showtext(self):
-        text = self.smallfont.render("Caught: " + str(self.score) + " out of: " + str(self.possible_score), True, (255, 255, 255))
+        text = self.smallfont.render("Caught: " + str(self.score), True, (255, 255, 255))
+        if self.ball_counter == 50 and not self.balls:
+            text = self.smallfont.render("Game over! You caught: " + str(self.score) + " out of: " + str(self.ball_counter), True, (255, 255, 255))
         textrect = self.screen.get_rect().topleft
         self.screen.blit(text, textrect)
 
