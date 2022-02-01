@@ -1,6 +1,4 @@
 # imports
-from ctypes import sizeof
-from queue import Empty
 import sys
 import pygame
 import random
@@ -9,12 +7,14 @@ from player import Player
 from ball import Ball
 from power_ball import PowerBall
 
-test = False
+_test = False
 
 class CatchBall:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((480, 480))
+        self.screen_width = 560
+        self.screen_height = 560
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.background = pygame.image.load("imgs/game_fill.png")
         self.clock = pygame.time.Clock()
         self.fps = 120
@@ -25,8 +25,8 @@ class CatchBall:
         self.ball = Ball(self)
         self.balls = [self.ball]
         self.player = Player(self)
-        if test:
-            self.player.img = pygame.transform.scale(self.player.img, (480, 480))
+        if _test:
+            self.player.img = pygame.transform.scale(self.player.img, (self.screen_width, self.screen_height))
             self.player.rect = self.player.img.get_rect()
         self.smallfont = pygame.font.Font(None, 24)
 
@@ -36,7 +36,7 @@ class CatchBall:
             self.player.moving()
             if self.ball_counter != 50:
                 self.ball_timer -= random.randint(0,200)
-                if test:
+                if _test:
                     self.ball_timer = 0
             if self.ball_timer <= 0:
                 #Adds a ball to array if there are no more than 10 on screen
@@ -49,7 +49,7 @@ class CatchBall:
                 ball_rect.left = ball.x
                 ball_rect.top = ball.y
                 #When ball exits screen, removes from array
-                if ball.y <= -31 or ball.y >= 481 or ball.x <= -31 or ball.x >= 481:
+                if ball.y <= -ball.ball_height-1 or ball.y >= self.screen_height+1 or ball.x <= -ball.ball_width-1 or ball.x >= self.screen_width+1:
                     self.balls.pop(self.balls.index(ball))
             self.catch_ball()
             self.update_screen()
@@ -63,7 +63,7 @@ class CatchBall:
                 sys.exit()
             #Begins movement of player
             if event.type == pygame.KEYDOWN:
-                if test:
+                if _test:
                     print("Key down recognized")
                 if event.key == pygame.K_d:
                     self.player.right = True
@@ -102,7 +102,7 @@ class CatchBall:
         self.ball_counter += 1
         ball_chance = random.randint(1, 10)
         if ball_chance > 8:
-            ball = PowerBall(self.player)
+            ball = PowerBall(self)
             ball.vel = random.uniform(1.5, 2.5)
         else:
             ball = Ball(self)
@@ -125,7 +125,7 @@ class CatchBall:
         self.screen.blit(text, textrect)
 
 if __name__ == '__main__':
-    if test:
+    if _test:
             print("In __main__")
     cb = CatchBall()
     cb.run_game()
